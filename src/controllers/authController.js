@@ -8,7 +8,7 @@ const emailRegex = /^([\w.*-]+@([\w-]+\.)+[\w-]{2,4})?$/;
 
 // ------------------------------------------------------------------
 // @route POST /api/auth/login
-// @access public
+// @access Public
 const logIn = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -38,7 +38,7 @@ const logIn = asyncHandler(async (req, res) => {
 
 // ------------------------------------------------------------------
 // @route POST /api/auth/signup
-// @access public
+// @access Public
 const signUp = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -69,4 +69,20 @@ const signUp = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { logIn, signUp };
+// ------------------------------------------------------------------
+// @route GET /api/auth/user
+// @access Private
+const getUser = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("Not authorized");
+  }
+
+  res.status(200).json({ user: { _id: user._id, email: user.email } });
+});
+
+module.exports = { logIn, signUp, getUser };

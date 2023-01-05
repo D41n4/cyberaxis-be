@@ -4,12 +4,14 @@ const colors = require("colors");
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const { errorHandler } = require("./middleware/error");
 
 const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
