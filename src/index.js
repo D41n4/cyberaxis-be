@@ -11,6 +11,10 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
