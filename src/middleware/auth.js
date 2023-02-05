@@ -13,6 +13,11 @@ const protect = asyncHandler(async (req, res, next) => {
       const token = req.headers.authorization.split(" ")[1];
       decoded = decodeToken(token);
 
+      if (!decoded) {
+        res.status(401);
+        throw new Error("Not authorized, no token");
+      }
+
       const user = await User.findById(decoded.id);
 
       if (!user) {
@@ -27,11 +32,6 @@ const protect = asyncHandler(async (req, res, next) => {
       res.status(500);
       throw new Error(err.message);
     }
-  }
-
-  if (!decoded) {
-    res.status(401);
-    throw new Error("Not authorized, no token");
   }
 });
 
