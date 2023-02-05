@@ -5,6 +5,7 @@ const tweetSchema = new mongoose.Schema(
     searchString: { type: String },
     id: { type: String, required: true, unique: true },
     author_id: { type: String, required: true },
+    isTrusted: { type: Boolean, default: false },
     text: { type: String, required: true, unique: true },
     created_at: { type: Date, required: true },
     lang: String,

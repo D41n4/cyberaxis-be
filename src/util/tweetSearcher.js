@@ -72,6 +72,21 @@ const filterFn = (tweet) => {
 };
 
 const parseFn = (el) => {
+  const trustedIds = [
+    "2778002300", //CPO Magazine
+    "209811713", //The Hacker News
+    "3819701", //ZDNET
+    "29415843", //Infosecurity Magazine
+    "621583", //BBCTech
+    "5402612", //BBC Breaking News
+    "22873424", //CIO Online
+    "24682806", //CSO Online
+    "18066440", //CISA Cyber
+    "41258937", //Security Week
+    "4210241608", //NCSC UK
+    "713973", //IT Pro
+  ];
+
   const allEntities = el.context_annotations.map((ca) => ca.entity.id);
 
   const filteredEntities = filter(allEntities, (en) =>
@@ -82,10 +97,11 @@ const parseFn = (el) => {
     id: el.id,
     author_id: el.author_id,
     created_at: el.created_at,
+    isTrusted: trustedIds.some((id) => id === el.author_id),
     text: el.text,
     lang: el.lang,
     public_metrics: el.public_metrics,
-    hashtags: el.entities.hashtags.map((h) => h.tag),
+    hashtags: el.entities.hashtags.map((h) => h.tag.toLowerCase()),
     entities: uniq(filteredEntities),
     urls:
       el.entities?.urls?.map((u) => {
@@ -123,11 +139,14 @@ const runTweetSearcher = () => {
     "ransomware ",
   ];
 
-  cron.schedule("0 0 * * * *", async () => {
+  cron.schedule("0 0 */1 * * *", async () => {
+    // cron.schedule("*/5 * * * * *", async () => {
     console.log("---------------------------------------");
     console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
     for await (const searchString of searchStrings) {
-      const tweets = await tweetSearcher(searchString);
+      const tweets = await tweetSearcher(searchString).catch((err) =>
+        console.log(err)
+      );
 
       console.log("searchString", searchString);
 
