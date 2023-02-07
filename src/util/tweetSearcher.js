@@ -1,6 +1,6 @@
 const twitterClient = require("../config/twitterClient");
 const moment = require("moment");
-const { filter, uniq } = require("lodash");
+const { filter } = require("lodash");
 const cron = require("node-cron");
 const Tweet = require("../models/tweetModel");
 const colors = require("colors");
@@ -31,6 +31,21 @@ const excludedHashtags = [
   "LGBTQ",
   "LGBT",
 ]; // TODO use regxp
+
+const trustedIds = [
+  "2778002300", //CPO Magazine
+  "209811713", //The Hacker News
+  "3819701", //ZDNET
+  "29415843", //Infosecurity Magazine
+  "621583", //BBCTech
+  "5402612", //BBC Breaking News
+  "22873424", //CIO Online
+  "24682806", //CSO Online
+  "18066440", //CISA Cyber
+  "41258937", //Security Week
+  "4210241608", //NCSC UK
+  "713973", //IT Pro
+];
 
 const filterFn = (tweet) => {
   let domainPass = false;
@@ -72,27 +87,7 @@ const filterFn = (tweet) => {
 };
 
 const parseFn = (el) => {
-  const trustedIds = [
-    "2778002300", //CPO Magazine
-    "209811713", //The Hacker News
-    "3819701", //ZDNET
-    "29415843", //Infosecurity Magazine
-    "621583", //BBCTech
-    "5402612", //BBC Breaking News
-    "22873424", //CIO Online
-    "24682806", //CSO Online
-    "18066440", //CISA Cyber
-    "41258937", //Security Week
-    "4210241608", //NCSC UK
-    "713973", //IT Pro
-  ];
-
-  const allEntities = el.context_annotations.map((ca) => ca.entity.id);
-
-  const filteredEntities = filter(allEntities, (en) =>
-    allowedEntities.includes(en)
-  );
-
+  console.log(el);
   return {
     id: el.id,
     author_id: el.author_id,
@@ -102,7 +97,6 @@ const parseFn = (el) => {
     lang: el.lang,
     public_metrics: el.public_metrics,
     hashtags: el.entities.hashtags.map((h) => h.tag.toLowerCase()),
-    entities: uniq(filteredEntities),
     urls:
       el.entities?.urls?.map((u) => {
         return {
@@ -115,7 +109,21 @@ const parseFn = (el) => {
   };
 };
 
-const tweetSearcher = async (searchString) => {
+const getTweetsByUserId = async (id) => {
+  const tweets = await twitterClient.v2.get(`users/${id}/tweets`, {
+    max_results: 10,
+    "tweet.fields":
+      "author_id,created_at,entities,lang,public_metrics,context_annotations",
+  });
+
+  const withHashtags = filter(tweets.data, (el) => el.entities.hashtags);
+
+  const parsed = withHashtags.map(parseFn);
+
+  return parsed;
+};
+
+const getRecentTweets = async (searchString) => {
   const data = await twitterClient.v2.get("tweets/search/recent", {
     query: searchString,
     max_results: 100,
@@ -137,24 +145,37 @@ const runTweetSearcher = () => {
     "cyber attack",
     "data leak",
     "ransomware ",
+    "hackers",
   ];
 
-  cron.schedule("0 0 */1 * * *", async () => {
+  cron.schedule("0 0 */2 * * *", async () => {
     // cron.schedule("*/5 * * * * *", async () => {
     console.log("---------------------------------------");
     console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
-    for await (const searchString of searchStrings) {
-      const tweets = await tweetSearcher(searchString).catch((err) =>
+    // for await (const searchString of searchStrings) {
+    //   const tweets = await getRecentTweets(searchString).catch((err) =>
+    //     console.log(err)
+    //   );
+
+    //   console.log("searchString", searchString);
+
+    //   tweets.forEach((el) => {
+    //     Tweet.create({ ...el, searchString }).catch(() => {});
+    //   });
+    // }
+    for await (const id of trustedIds) {
+      console.log(id);
+      const tweets = await getTweetsByUserId(id).catch((err) =>
         console.log(err)
       );
 
-      console.log("searchString", searchString);
+      console.log(tweets);
 
-      tweets.forEach((el) => {
-        Tweet.create({ ...el, searchString }).catch(() => {});
+      tweets.forEach((tweet) => {
+        Tweet.create({ ...tweet }).catch(() => {});
       });
     }
   });
 };
 
-module.exports = { tweetSearcher, runTweetSearcher };
+module.exports = { getRecentTweets, runTweetSearcher };

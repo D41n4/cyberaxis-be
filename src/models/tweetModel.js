@@ -16,7 +16,6 @@ const tweetSchema = new mongoose.Schema(
       quote_count: Number,
     },
     hashtags: [String],
-    entities: [String],
     urls: [
       {
         url: String,
