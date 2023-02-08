@@ -5,6 +5,7 @@ const { generateToken } = require("../util/jwt");
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,16}$/;
 const emailRegex = /^([\w.*-]+@([\w-]+\.)+[\w-]{2,4})?$/;
+const userNameRegex = /^[a-zA-Z]{2,30}$/;
 
 // ------------------------------------------------------------------
 // @route POST /api/auth/login
@@ -31,7 +32,7 @@ const logIn = asyncHandler(async (req, res) => {
   }
 
   res.status(200).json({
-    user: { _id: user._id, email: user.email },
+    user: { _id: user._id, name: user.name, email: user.email },
     token: generateToken(user._id),
   });
 });
@@ -40,9 +41,13 @@ const logIn = asyncHandler(async (req, res) => {
 // @route POST /api/auth/signup
 // @access Public
 const signUp = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!passwordRegex.test(password) || !emailRegex.test(email)) {
+  if (
+    !passwordRegex.test(password) ||
+    !emailRegex.test(email) ||
+    !userNameRegex.test(name)
+  ) {
     res.status(400);
     throw new Error("Invalid user details");
   }
@@ -59,12 +64,13 @@ const signUp = asyncHandler(async (req, res) => {
   const hashedPassword = await generate(password);
 
   const user = await User.create({
-    email,
+    name: name,
+    email: email.toLowerCase(),
     password: hashedPassword,
   });
 
   res.status(201).json({
-    user: { _id: user._id, email: user.email },
+    user: { _id: user._id, name: user.name, email: user.email },
     token: generateToken(user._id),
   });
 });
@@ -82,7 +88,9 @@ const getUser = asyncHandler(async (req, res) => {
     throw new Error("Not authorized");
   }
 
-  res.status(200).json({ user: { _id: user._id, email: user.email } });
+  res
+    .status(200)
+    .json({ user: { _id: user._id, name: user.name, email: user.email } });
 });
 
 module.exports = { logIn, signUp, getUser };

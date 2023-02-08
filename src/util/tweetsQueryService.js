@@ -3,7 +3,6 @@ const moment = require("moment");
 const { filter } = require("lodash");
 const cron = require("node-cron");
 const Tweet = require("../models/tweetModel");
-const colors = require("colors");
 
 const allowedDomains = [
   "30", //Entities [Entity Service]
@@ -47,7 +46,15 @@ const trustedIds = [
   "713973", //IT Pro
 ];
 
-const filterFn = (tweet) => {
+const searchStrings = [
+  "cyber breach",
+  "cyber attack",
+  "data leak",
+  "ransomware ",
+  "hackers",
+];
+
+const filterTweets = (tweet) => {
   let domainPass = false;
   let entityPass = false;
   let hashTagPass = true;
@@ -86,8 +93,7 @@ const filterFn = (tweet) => {
   return domainPass && entityPass && hashTagPass && rtPass;
 };
 
-const parseFn = (el) => {
-  console.log(el);
+const parseToDoc = (el) => {
   return {
     id: el.id,
     author_id: el.author_id,
@@ -116,14 +122,14 @@ const getTweetsByUserId = async (id) => {
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
 
+  // Exclude tweets without hashtags
   const withHashtags = filter(tweets.data, (el) => el.entities.hashtags);
-
-  const parsed = withHashtags.map(parseFn);
+  const parsed = withHashtags.map(parseToDoc);
 
   return parsed;
 };
 
-const getRecentTweets = async (searchString) => {
+const getTweetsRecent = async (searchString) => {
   const data = await twitterClient.v2.get("tweets/search/recent", {
     query: searchString,
     max_results: 100,
@@ -132,50 +138,44 @@ const getRecentTweets = async (searchString) => {
     end_time: moment().subtract(12, "hours").toISOString(),
   });
 
-  const filtered = filter(data.data, filterFn);
-  const parsed = filtered.map(parseFn);
+  const filtered = filter(data.data, filterTweets);
+  const parsed = filtered.map(parseToDoc);
 
   return parsed;
 };
 
-const runTweetSearcher = () => {
-  console.log("HIT");
-  const searchStrings = [
-    "cyber breach",
-    "cyber attack",
-    "data leak",
-    "ransomware ",
-    "hackers",
-  ];
-
+const tweetsQueryService = () => {
   cron.schedule("0 0 */2 * * *", async () => {
     // cron.schedule("*/5 * * * * *", async () => {
-    console.log("---------------------------------------");
+    console.log("----------------------------------getTweetsByUserId()");
     console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
-    // for await (const searchString of searchStrings) {
-    //   const tweets = await getRecentTweets(searchString).catch((err) =>
-    //     console.log(err)
-    //   );
-
-    //   console.log("searchString", searchString);
-
-    //   tweets.forEach((el) => {
-    //     Tweet.create({ ...el, searchString }).catch(() => {});
-    //   });
-    // }
     for await (const id of trustedIds) {
       console.log(id);
       const tweets = await getTweetsByUserId(id).catch((err) =>
         console.log(err)
       );
 
-      console.log(tweets);
-
       tweets.forEach((tweet) => {
         Tweet.create({ ...tweet }).catch(() => {});
       });
     }
   });
+
+  cron.schedule("0 0 */2 * * *", async () => {
+    // cron.schedule("*/5 * * * * *", async () => {
+    console.log("---------------------------------getTweetsRecent()");
+    console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
+
+    for await (const searchString of searchStrings) {
+      const tweets = await getTweetsRecent(searchString).catch((err) =>
+        console.log(err)
+      );
+
+      tweets.forEach((el) => {
+        Tweet.create({ ...el, searchString }).catch(() => {});
+      });
+    }
+  });
 };
 
-module.exports = { getRecentTweets, runTweetSearcher };
+module.exports = tweetsQueryService;

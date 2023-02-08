@@ -4,15 +4,17 @@ const colors = require("colors");
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const tweetsRoutes = require("./routes/tweetsRoutes");
 const { errorHandler } = require("./middleware/error");
-require("./util/tweetSearcher").runTweetSearcher();
+require("./util/tweetsQueryService")();
 
 const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/tweets", tweetsRoutes);
 
 app.get("/health", (req, res) => {

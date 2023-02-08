@@ -1,9 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Tweet = require("../models/tweetModel");
-const { getRecentTweets } = require("../util/tweetSearcher");
-const colors = require("colors");
 const moment = require("moment");
-const cron = require("node-cron");
 
 // ------------------------------------------------------------------
 // @route GET /api/tweets/top-hashtags
@@ -40,18 +37,9 @@ const topHashtags = asyncHandler(async (req, res) => {
 // @route GET /api/tweets/test/tweets/search
 // @access Private
 // @query searchString: string
+// DEPRECATED!!
 const testSearchTweets = asyncHandler(async (req, res) => {
-  const searchString = req.query.searchString;
-
-  const tweets = await getRecentTweets(searchString);
-
-  for await (const tweet of tweets) {
-    await Tweet.create({ ...tweet, searchString }).catch(() =>
-      console.log(colors.yellow(`Tweet exists: ${tweet.id} (${searchString})`))
-    );
-  }
-
-  res.status(200).json({ tweets: tweets });
+  res.status(200).json({ tweets: [] });
 });
 
 // ------------------------------------------------------------------
