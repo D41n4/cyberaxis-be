@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const { trustedAccounts } = require("../config/constants");
 const User = require("../models/userModel");
 const { generate, compare } = require("../util/bcrypt");
 const { generateToken } = require("../util/jwt");
@@ -32,4 +33,89 @@ const changeName = asyncHandler(async (req, res) => {
   res.sendStatus(204);
 });
 
-module.exports = { changeName };
+// ------------------------------------------------------------------
+// @route GET /api/user/trusted-accounts
+// @access Private
+const getTrustedAccounts = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("Not authorized");
+  }
+
+  const myAccounts = user.trustedAccounts;
+
+  const accounts = trustedAccounts.map((el) => {
+    return { ...el, isDefault: true };
+  });
+
+  const combined = [...accounts, ...myAccounts];
+
+  res.status(200).json({ data: combined });
+});
+
+// ------------------------------------------------------------------
+// @route POST /api/user/trusted-accounts
+// @access Private
+const addTrustedAccount = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { id, name } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("Not authorized");
+  }
+
+  const accAlreadyAdded = user.trustedAccounts.some((el) => el.id === id);
+
+  if (accAlreadyAdded) {
+    res.status(400);
+    throw new Error("Account already added");
+  }
+
+  user.trustedAccounts.push({ id, name });
+
+  await user.save();
+
+  res.sendStatus(201);
+});
+
+// ------------------------------------------------------------------
+// @route DELETE /api/user/trusted-accounts/:id
+// @access Private
+const deleteTrustedAccount = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const id = req.params.id;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(401);
+    throw new Error("Not authorized");
+  }
+
+  const idx = user.trustedAccounts.findIndex((el) => el.id === id);
+
+  if (idx === -1) {
+    res.status(404);
+    throw new Error("Not found");
+  }
+
+  user.trustedAccounts.splice(idx, 1);
+
+  await user.save();
+
+  res.sendStatus(204);
+});
+
+module.exports = {
+  changeName,
+  getTrustedAccounts,
+  addTrustedAccount,
+  deleteTrustedAccount,
+};

@@ -6,7 +6,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const tweetsRoutes = require("./routes/tweetsRoutes");
-const { errorHandler } = require("./middleware/error");
+const errorHandler = require("./middleware/errorHandler");
 require("./util/tweetsQueryService")();
 
 const app = express();

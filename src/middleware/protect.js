@@ -15,7 +15,7 @@ const protect = asyncHandler(async (req, res, next) => {
 
       if (!decoded) {
         res.status(401);
-        throw new Error("Not authorized, no token");
+        throw new Error("Not authorized");
       }
 
       const user = await User.findById(decoded.id);
@@ -32,7 +32,10 @@ const protect = asyncHandler(async (req, res, next) => {
       res.status(500);
       throw new Error(err.message);
     }
+  } else {
+    res.status(401);
+    throw new Error("Not authorized, no token");
   }
 });
 
-module.exports = { protect };
+module.exports = protect;

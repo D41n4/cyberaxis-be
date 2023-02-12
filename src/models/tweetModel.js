@@ -14,6 +14,7 @@ const tweetSchema = new mongoose.Schema(
       reply_count: Number,
       like_count: Number,
       quote_count: Number,
+      impression_count: Number,
     },
     hashtags: [String],
     urls: [

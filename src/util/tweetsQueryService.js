@@ -3,6 +3,10 @@ const moment = require("moment");
 const { filter } = require("lodash");
 const cron = require("node-cron");
 const Tweet = require("../models/tweetModel");
+const { trustedAccounts } = require("../config/constants");
+const colors = require("colors");
+
+const trustedIds = trustedAccounts.map((el) => el.id);
 
 const allowedDomains = [
   "30", //Entities [Entity Service]
@@ -29,21 +33,6 @@ const excludedHashtags = [
   "training",
   "LGBTQ",
   "LGBT",
-]; // TODO use regxp
-
-const trustedIds = [
-  "2778002300", //CPO Magazine
-  "209811713", //The Hacker News
-  "3819701", //ZDNET
-  "29415843", //Infosecurity Magazine
-  "621583", //BBCTech
-  "5402612", //BBC Breaking News
-  "22873424", //CIO Online
-  "24682806", //CSO Online
-  "18066440", //CISA Cyber
-  "41258937", //Security Week
-  "4210241608", //NCSC UK
-  "713973", //IT Pro
 ];
 
 const searchStrings = [
@@ -122,9 +111,11 @@ const getTweetsByUserId = async (id) => {
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
 
-  // Exclude tweets without hashtags
-  const withHashtags = filter(tweets.data, (el) => el.entities.hashtags);
+  const withHashtags = filter(tweets.data, (el) => el.entities?.hashtags);
+  // const withHashtags = filter(tweets.data, filterTweets);
   const parsed = withHashtags.map(parseToDoc);
+
+  // console.log(parsed);
 
   return parsed;
 };
@@ -147,35 +138,47 @@ const getTweetsRecent = async (searchString) => {
 const tweetsQueryService = () => {
   cron.schedule("0 0 */2 * * *", async () => {
     // cron.schedule("*/5 * * * * *", async () => {
-    console.log("----------------------------------getTweetsByUserId()");
-    console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
+    console.log(`${moment().format("YYYY-MM-DD HH:mm")}----------ByUserId`);
     for await (const id of trustedIds) {
-      console.log(id);
       const tweets = await getTweetsByUserId(id).catch((err) =>
         console.log(err)
       );
 
       tweets.forEach((tweet) => {
-        Tweet.create({ ...tweet }).catch(() => {});
+        Tweet.create({ ...tweet }).catch((err) => {
+          // check if duplicate and update
+          if (err.code === 11000) {
+            Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+              console.log(colors.red(`ERR - update: ${err.message}`))
+            );
+          }
+        });
       });
     }
   });
 
-  cron.schedule("0 0 */2 * * *", async () => {
-    // cron.schedule("*/5 * * * * *", async () => {
-    console.log("---------------------------------getTweetsRecent()");
-    console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
+  // cron.schedule("0 0 */2 * * *", async () => {
+  //   // cron.schedule("*/5 * * * * *", async () => {
+  //   console.log(`${moment().format("YYYY-MM-DD HH:mm")}----------Recent`);
 
-    for await (const searchString of searchStrings) {
-      const tweets = await getTweetsRecent(searchString).catch((err) =>
-        console.log(err)
-      );
+  //   for await (const searchString of searchStrings) {
+  //     const tweets = await getTweetsRecent(searchString).catch((err) =>
+  //       console.log(err)
+  //     );
 
-      tweets.forEach((el) => {
-        Tweet.create({ ...el, searchString }).catch(() => {});
-      });
-    }
-  });
+  //     tweets.forEach((tweet) => {
+  //       Tweet.create({ ...tweet, searchString }).catch((err) => {
+  //         console.log(colors.red(`ERR - create: ${err.message}`));
+  //         // check if duplicate and update
+  //         if (err.code === 11000) {
+  //           Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+  //             console.log(colors.red(`ERR - update: ${err.message}`))
+  //           );
+  //         }
+  //       });
+  //     });
+  //   }
+  // });
 };
 
 module.exports = tweetsQueryService;
