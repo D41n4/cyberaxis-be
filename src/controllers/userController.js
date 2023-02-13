@@ -1,8 +1,9 @@
+const { compare } = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const { trustedAccounts } = require("../config/constants");
 const User = require("../models/userModel");
-const { generate, compare } = require("../util/bcrypt");
-const { generateToken } = require("../util/jwt");
+const { generate } = require("../util/bcrypt");
+const { passwordRegex } = require("../util/misc");
 
 const userNameRegex = /^[a-zA-Z]{2,30}$/;
 
@@ -41,11 +42,6 @@ const getTrustedAccounts = asyncHandler(async (req, res) => {
 
   const user = await User.findById(userId);
 
-  if (!user) {
-    res.status(401);
-    throw new Error("Not authorized");
-  }
-
   const myAccounts = user.trustedAccounts;
 
   const accounts = trustedAccounts.map((el) => {
@@ -65,11 +61,6 @@ const addTrustedAccount = asyncHandler(async (req, res) => {
   const { id, name } = req.body;
 
   const user = await User.findById(userId);
-
-  if (!user) {
-    res.status(401);
-    throw new Error("Not authorized");
-  }
 
   const accAlreadyAdded = user.trustedAccounts.some((el) => el.id === id);
 
@@ -94,11 +85,6 @@ const deleteTrustedAccount = asyncHandler(async (req, res) => {
 
   const user = await User.findById(userId);
 
-  if (!user) {
-    res.status(401);
-    throw new Error("Not authorized");
-  }
-
   const idx = user.trustedAccounts.findIndex((el) => el.id === id);
 
   if (idx === -1) {
@@ -113,9 +99,55 @@ const deleteTrustedAccount = asyncHandler(async (req, res) => {
   res.sendStatus(204);
 });
 
+// ------------------------------------------------------------------
+// @route PUT /api/user/change-password
+// @access Private
+const changePassword = asyncHandler(async (req, res) => {
+  const { existingPassword, newPassword } = req.body;
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  const passwordsMatch = await compare(existingPassword, user.password);
+
+  if (!passwordsMatch) {
+    res.status(400);
+    throw new Error("Invalid password");
+  }
+
+  if (!passwordRegex.test(newPassword)) {
+    res.status(400);
+    throw new Error("Invalid password");
+  }
+
+  const hashedPassword = await generate(newPassword);
+
+  user.password = hashedPassword;
+
+  await user.save();
+  res.sendStatus(204);
+});
+
+// ------------------------------------------------------------------
+// @route DELETE /api/user/delete-account
+// @access Private
+const deleteAccount = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    await User.deleteById(userId);
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(400);
+    throw new Error("Error deleting account");
+  }
+});
+
 module.exports = {
   changeName,
   getTrustedAccounts,
   addTrustedAccount,
   deleteTrustedAccount,
+  changePassword,
+  deleteAccount,
 };

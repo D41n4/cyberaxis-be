@@ -2,18 +2,13 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const { generate, compare } = require("../util/bcrypt");
 const { generateToken } = require("../util/jwt");
-
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,16}$/;
-const emailRegex = /^([\w.*-]+@([\w-]+\.)+[\w-]{2,4})?$/;
-const userNameRegex = /^[a-zA-Z]{2,30}$/;
+const { passwordRegex, emailRegex, userNameRegex } = require("../util/misc");
 
 // ------------------------------------------------------------------
 // @route POST /api/auth/login
 // @access Public
 const logIn = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
-  console.log(email, password);
 
   const user = await User.findOne({
     email: email.toLowerCase(),
