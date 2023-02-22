@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Tweet = require("../models/tweetModel");
 const moment = require("moment");
+const User = require("../models/userModel");
 
 // ------------------------------------------------------------------
 // @route GET /api/tweets/top-hashtags
@@ -30,18 +31,48 @@ const topHashtags = asyncHandler(async (req, res) => {
 
   const hashtags = await Tweet.aggregate(pipeline);
 
-  res.status(200).json({ hashtags: hashtags });
+  res.status(200).json({ data: hashtags });
 });
 
 // ------------------------------------------------------------------
-// @route GET /api/tweets/test/tweets/search
+// @route GET /api/tweets
 // @access Private
-// @query searchString: string
-// DEPRECATED!!
-const testSearchTweets = asyncHandler(async (req, res) => {
-  res.status(200).json({ tweets: [] });
+const getTweets = asyncHandler(async (req, res) => {
+  const tweets = await Tweet.find({})
+    .lean()
+    .limit(200)
+    .sort({ created_at: -1 });
+
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  const favouriteTweets = user.favouriteTweets;
+
+  const tweetsWithFavourite = tweets.map((el) => {
+    const isFavourite = favouriteTweets.includes(el._id);
+
+    return { ...el, isFavourite };
+  });
+
+  res.status(200).json({ data: tweetsWithFavourite });
 });
 
+// ------------------------------------------------------------------
+// @route GET /api/tweets/saved
+// @access Private
+const getSavedTweets = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const user = await User.findById(userId).lean().populate("favouriteTweets");
+
+  const tweets = user.favouriteTweets.map((el) => {
+    return { ...el, isFavourite: true };
+  });
+
+  res.status(200).json({ data: tweets });
+});
+
+// TODO
 // ------------------------------------------------------------------
 // @route GET /api/tweets/test/tweets/query
 // @access Private
@@ -86,4 +117,4 @@ const testQueryTweets = asyncHandler(async (req, res) => {
   res.status(200).json({ tweets: data });
 });
 
-module.exports = { topHashtags, testSearchTweets, testQueryTweets };
+module.exports = { topHashtags, getTweets, testQueryTweets, getSavedTweets };

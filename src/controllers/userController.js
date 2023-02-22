@@ -143,6 +143,29 @@ const deleteAccount = asyncHandler(async (req, res) => {
   }
 });
 
+// ------------------------------------------------------------------
+// @route PUT /api/user/favourite-tweet
+// @access Private
+const favouriteTweet = asyncHandler(async (req, res) => {
+  const { tweetId } = req.body;
+
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  const idx = user.favouriteTweets.findIndex((el) => el.toString() === tweetId);
+
+  if (idx === -1) {
+    user.favouriteTweets.push(tweetId);
+  } else {
+    user.favouriteTweets.splice(idx, 1);
+  }
+
+  await user.save();
+
+  res.sendStatus(204);
+});
+
 module.exports = {
   changeName,
   getTrustedAccounts,
@@ -150,4 +173,5 @@ module.exports = {
   deleteTrustedAccount,
   changePassword,
   deleteAccount,
+  favouriteTweet,
 };

@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
         name: { type: String, required: true },
       },
     ],
+    favouriteTweets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tweet" }],
   },
   { timestamps: true }
 );

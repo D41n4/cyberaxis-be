@@ -6,6 +6,7 @@ const {
   deleteTrustedAccount,
   changePassword,
   deleteAccount,
+  favouriteTweet,
 } = require("../controllers/userController");
 const protect = require("../middleware/protect");
 
@@ -17,5 +18,6 @@ router.delete("/delete-account", protect, deleteAccount);
 router.get("/trusted-accounts", protect, getTrustedAccounts);
 router.post("/trusted-accounts", protect, addTrustedAccount);
 router.delete("/trusted-accounts/:id", protect, deleteTrustedAccount);
+router.put("/favourite-tweet", protect, favouriteTweet);
 
 module.exports = router;

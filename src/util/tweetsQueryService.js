@@ -106,16 +106,13 @@ const parseToDoc = (el) => {
 
 const getTweetsByUserId = async (id) => {
   const tweets = await twitterClient.v2.get(`users/${id}/tweets`, {
-    max_results: 10,
+    max_results: 100,
     "tweet.fields":
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
 
-  const withHashtags = filter(tweets.data, (el) => el.entities?.hashtags);
-  // const withHashtags = filter(tweets.data, filterTweets);
+  const withHashtags = filter(tweets.data, filterTweets);
   const parsed = withHashtags.map(parseToDoc);
-
-  // console.log(parsed);
 
   return parsed;
 };
@@ -137,7 +134,7 @@ const getTweetsRecent = async (searchString) => {
 
 const tweetsQueryService = () => {
   cron.schedule("0 0 */2 * * *", async () => {
-    // cron.schedule("*/5 * * * * *", async () => {
+    // cron.schedule("*/10 * * * * *", async () => {
     console.log(`${moment().format("YYYY-MM-DD HH:mm")}----------ByUserId`);
     for await (const id of trustedIds) {
       const tweets = await getTweetsByUserId(id).catch((err) =>
