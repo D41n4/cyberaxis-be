@@ -135,7 +135,6 @@ const getTweetsRecent = async (searchString) => {
 const tweetsQueryService = () => {
   cron.schedule("0 0 */2 * * *", async () => {
     // cron.schedule("*/10 * * * * *", async () => {
-    console.log(`${moment().format("YYYY-MM-DD HH:mm")}----------ByUserId`);
     for await (const id of trustedIds) {
       const tweets = await getTweetsByUserId(id).catch((err) =>
         console.log(err)
@@ -156,7 +155,6 @@ const tweetsQueryService = () => {
 
   // cron.schedule("0 0 */2 * * *", async () => {
   //   // cron.schedule("*/5 * * * * *", async () => {
-  //   console.log(`${moment().format("YYYY-MM-DD HH:mm")}----------Recent`);
 
   //   for await (const searchString of searchStrings) {
   //     const tweets = await getTweetsRecent(searchString).catch((err) =>

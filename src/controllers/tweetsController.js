@@ -27,6 +27,13 @@ const topHashtags = asyncHandler(async (req, res) => {
     },
     { $sort: { count: -1 } },
     { $limit: 30 },
+    {
+      $project: {
+        hashtag: "$_id",
+        count: 1,
+        _id: 0,
+      },
+    },
   ];
 
   const hashtags = await Tweet.aggregate(pipeline);
@@ -38,7 +45,15 @@ const topHashtags = asyncHandler(async (req, res) => {
 // @route GET /api/tweets
 // @access Private
 const getTweets = asyncHandler(async (req, res) => {
-  const tweets = await Tweet.find({})
+  const query = req.query;
+
+  const dbQuery = {
+    hashtags: { $all: query.selectedHashtags },
+  };
+
+  if (!query.selectedHashtags) delete dbQuery.hashtags;
+
+  const tweets = await Tweet.find(dbQuery)
     .lean()
     .limit(200)
     .sort({ created_at: -1 });
