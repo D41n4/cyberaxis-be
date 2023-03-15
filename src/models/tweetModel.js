@@ -25,6 +25,7 @@ const tweetSchema = new mongoose.Schema(
         images: [{ url: String, width: Number, height: Number }],
       },
     ],
+    entityList: [{ type: String }],
   },
   { timestamps: true }
 );

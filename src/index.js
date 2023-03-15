@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const tweetsRoutes = require("./routes/tweetsRoutes");
 const errorHandler = require("./middleware/errorHandler");
 require("./util/tweetsQueryService")();
+require("./util/nlpManager");
 
 const app = express();
 app.use(cors({ origin: "*" }));

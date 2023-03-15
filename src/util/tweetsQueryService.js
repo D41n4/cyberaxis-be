@@ -1,10 +1,11 @@
 const twitterClient = require("../config/twitterClient");
 const moment = require("moment");
-const { filter } = require("lodash");
+const { filter, uniq } = require("lodash");
 const cron = require("node-cron");
 const Tweet = require("../models/tweetModel");
 const { trustedAccounts } = require("../config/constants");
 const colors = require("colors");
+const { nlpManager } = require("./nlpManager");
 
 const trustedIds = trustedAccounts.map((el) => el.id);
 
@@ -106,13 +107,18 @@ const parseToDoc = (el) => {
 
 const getTweetsByUserId = async (id) => {
   const tweets = await twitterClient.v2.get(`users/${id}/tweets`, {
-    max_results: 100,
+    max_results: 10,
     "tweet.fields":
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
 
-  const withHashtags = filter(tweets.data, filterTweets);
-  const parsed = withHashtags.map(parseToDoc);
+  // const withHashtags = filter(tweets.data, filterTweets);
+  // const parsed = withHashtags.map(parseToDoc);
+
+  // return parsed;
+
+  const filtered = filter(tweets.data, filterTweets);
+  const parsed = filtered.map(parseToDoc);
 
   return parsed;
 };
@@ -134,14 +140,17 @@ const getTweetsRecent = async (searchString) => {
 
 const tweetsQueryService = () => {
   cron.schedule("0 0 */2 * * *", async () => {
-    // cron.schedule("*/10 * * * * *", async () => {
+    // cron.schedule("*/5 * * * * *", async () => {
     for await (const id of trustedIds) {
       const tweets = await getTweetsByUserId(id).catch((err) =>
         console.log(err)
       );
 
-      tweets.forEach((tweet) => {
-        Tweet.create({ ...tweet }).catch((err) => {
+      for await (const tweet of tweets) {
+        const entities = await nlpManager(tweet.text);
+        const entityList = uniq(entities.map((el) => el.entity));
+
+        Tweet.create({ ...tweet, entityList }).catch((err) => {
           // check if duplicate and update
           if (err.code === 11000) {
             Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
@@ -149,7 +158,20 @@ const tweetsQueryService = () => {
             );
           }
         });
-      });
+      }
+
+      // tweets.forEach((tweet) => {
+      //   console.log('length: ', tweets.length);
+
+      //   Tweet.create({ ...tweet }).catch((err) => {
+      //     // check if duplicate and update
+      //     if (err.code === 11000) {
+      //       Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+      //         console.log(colors.red(`ERR - update: ${err.message}`))
+      //       );
+      //     }
+      //   });
+      // });
     }
   });
 

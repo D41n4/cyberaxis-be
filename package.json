@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "audit": "yarn-audit-fix"
   },
   "author": "",
   "license": "ISC",
@@ -21,9 +22,11 @@
     "moment": "^2.29.4",
     "mongoose": "^6.8.2",
     "node-cron": "^3.0.2",
+    "node-nlp": "3.10.2",
     "twitter-api-v2": "^1.13.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "yarn-audit-fix": "^9.3.9"
   }
 }
