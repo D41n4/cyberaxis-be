@@ -105,17 +105,22 @@ const parseToDoc = (el) => {
   };
 };
 
+const getUserFollowers = async (id) => {
+  const metrics = await twitterClient.v2
+    .get(`users/${id}`, {
+      "user.fields": "public_metrics",
+    })
+    .catch((err) => console.log("ERR:", err));
+
+  return metrics.data.public_metrics.followers_count;
+};
+
 const getTweetsByUserId = async (id) => {
   const tweets = await twitterClient.v2.get(`users/${id}/tweets`, {
-    max_results: 10,
+    max_results: 100,
     "tweet.fields":
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
-
-  // const withHashtags = filter(tweets.data, filterTweets);
-  // const parsed = withHashtags.map(parseToDoc);
-
-  // return parsed;
 
   const filtered = filter(tweets.data, filterTweets);
   const parsed = filtered.map(parseToDoc);
@@ -129,7 +134,6 @@ const getTweetsRecent = async (searchString) => {
     max_results: 100,
     "tweet.fields":
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
-    end_time: moment().subtract(12, "hours").toISOString(),
   });
 
   const filtered = filter(data.data, filterTweets);
@@ -159,43 +163,38 @@ const tweetsQueryService = () => {
           }
         });
       }
-
-      // tweets.forEach((tweet) => {
-      //   console.log('length: ', tweets.length);
-
-      //   Tweet.create({ ...tweet }).catch((err) => {
-      //     // check if duplicate and update
-      //     if (err.code === 11000) {
-      //       Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
-      //         console.log(colors.red(`ERR - update: ${err.message}`))
-      //       );
-      //     }
-      //   });
-      // });
     }
   });
 
-  // cron.schedule("0 0 */2 * * *", async () => {
-  //   // cron.schedule("*/5 * * * * *", async () => {
+  cron.schedule("0 0 */2 * * *", async () => {
+    // cron.schedule("*/10 * * * * *", async () => {
+    for await (const searchString of searchStrings) {
+      const tweets = await getTweetsRecent(searchString).catch((err) =>
+        console.log(err)
+      );
 
-  //   for await (const searchString of searchStrings) {
-  //     const tweets = await getTweetsRecent(searchString).catch((err) =>
-  //       console.log(err)
-  //     );
+      for await (const tweet of tweets) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const followers = await getUserFollowers(tweet.author_id);
 
-  //     tweets.forEach((tweet) => {
-  //       Tweet.create({ ...tweet, searchString }).catch((err) => {
-  //         console.log(colors.red(`ERR - create: ${err.message}`));
-  //         // check if duplicate and update
-  //         if (err.code === 11000) {
-  //           Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
-  //             console.log(colors.red(`ERR - update: ${err.message}`))
-  //           );
-  //         }
-  //       });
-  //     });
-  //   }
-  // });
+        // console.log(followers, followers > 10000);
+
+        if (followers > 10000) {
+          const entities = await nlpManager(tweet.text);
+          const entityList = uniq(entities.map((el) => el.entity));
+
+          Tweet.create({ ...tweet, entityList }).catch((err) => {
+            // check if duplicate and update
+            if (err.code === 11000) {
+              Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+                console.log(colors.red(`ERR - update: ${err.message}`))
+              );
+            }
+          });
+        }
+      }
+    }
+  });
 };
 
 module.exports = tweetsQueryService;

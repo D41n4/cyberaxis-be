@@ -60,4 +60,47 @@ const osData = [
   "Chrome OS",
 ];
 
-module.exports = { mallwareData, hackersGroupsData, organisationsData, osData };
+const softwareData = [
+  "Adobe",
+  "Apple",
+  "Autodesk",
+  "Autocad",
+  "Blender",
+  "Cinema 4D",
+  "Corel",
+  "Daz 3D",
+  "Dreamweaver",
+  "Final Cut Pro",
+  "Flash",
+  "Drupal",
+  "Joomla",
+  "Magento",
+  "WordPress",
+  "Wix",
+  "Squarespace",
+  "Shopify",
+  "Weebly",
+  "BigCommerce",
+  "Volusion",
+  "OpenCart",
+  "PrestaShop",
+  "WooCommerce",
+  "Plesk",
+  "cPanel",
+  "Webmin",
+  "DirectAdmin",
+  "VestaCP",
+  "ISPConfig",
+  "ZPanel",
+  "InterWorx",
+  "Ensim",
+  "Fortra",
+];
+
+module.exports = {
+  mallwareData,
+  hackersGroupsData,
+  organisationsData,
+  osData,
+  softwareData,
+};

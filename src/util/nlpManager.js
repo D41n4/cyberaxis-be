@@ -4,6 +4,7 @@ const {
   organisationsData,
   osData,
   hackersGroupsData,
+  softwareData,
 } = require("../config/trainData");
 
 // interface Entitiy {
@@ -37,6 +38,8 @@ manager.addNamedEntityText(
 );
 
 manager.addNamedEntityText("OS", "default", ["en"], osData);
+
+manager.addNamedEntityText("SOFTWARE", "default", ["en"], softwareData);
 
 const nlpManager = async (text) => {
   try {

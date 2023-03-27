@@ -49,9 +49,15 @@ const getTweets = asyncHandler(async (req, res) => {
 
   const dbQuery = {
     hashtags: { $all: query.selectedHashtags },
+    entityList: { $all: query.selectedEntities },
+    created_at: {
+      $gte: moment().subtract(query.dateFilter, "days").toISOString(),
+    },
   };
 
   if (!query.selectedHashtags) delete dbQuery.hashtags;
+  if (!query.selectedEntities) delete dbQuery.entityList;
+  if (query.dateFilter === "0") delete dbQuery.created_at; //if dateFilter is 0, then we want to get all tweets
 
   const tweets = await Tweet.find(dbQuery)
     .lean()
@@ -87,7 +93,6 @@ const getSavedTweets = asyncHandler(async (req, res) => {
   res.status(200).json({ data: tweets });
 });
 
-// TODO
 // ------------------------------------------------------------------
 // @route GET /api/tweets/test/tweets/query
 // @access Private
