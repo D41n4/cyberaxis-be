@@ -23,6 +23,8 @@ const hackersGroupsData = [
   "The Shadow Brokers",
   "The Impact Team",
   "The Syrian Electronic Army",
+  "APT37",
+  "ScarCruft",
 ];
 
 const organisationsData = [
@@ -44,6 +46,8 @@ const organisationsData = [
   "Quora",
   "Medium",
   "Flickr",
+  "OpenAI",
+  "Meta",
 ];
 
 const osData = [
@@ -95,6 +99,7 @@ const softwareData = [
   "InterWorx",
   "Ensim",
   "Fortra",
+  "ChatGPT",
 ];
 
 module.exports = {
