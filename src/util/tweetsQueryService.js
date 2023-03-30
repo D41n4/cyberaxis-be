@@ -179,7 +179,7 @@ const tweetsQueryService = () => {
 
         // console.log(followers, followers > 10000);
 
-        if (followers > 10000) {
+        if (followers > 100000) {
           const entities = await nlpManager(tweet.text);
           const entityList = uniq(entities.map((el) => el.entity));
 
