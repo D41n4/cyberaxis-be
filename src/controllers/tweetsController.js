@@ -46,12 +46,17 @@ const topHashtags = asyncHandler(async (req, res) => {
 // @access Private
 const getTweets = asyncHandler(async (req, res) => {
   const query = req.query;
+  console.log(query);
 
   const dbQuery = {
     hashtags: { $all: query.selectedHashtags },
     entityList: { $all: query.selectedEntities },
     created_at: {
       $gte: moment().subtract(query.dateFilter, "days").toISOString(),
+    },
+    text: {
+      $regex: query.searchString,
+      $options: "i",
     },
   };
 
