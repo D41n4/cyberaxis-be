@@ -130,11 +130,13 @@ const getTweetsByUserId = async (id) => {
 
 const getTweetsRecent = async (searchString) => {
   const data = await twitterClient.v2.get("tweets/search/recent", {
-    query: searchString,
+    query: `${searchString} lang:en`,
     max_results: 100,
     "tweet.fields":
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
+
+  console.log(data);
 
   const filtered = filter(data.data, filterTweets);
   const parsed = filtered.map(parseToDoc);
