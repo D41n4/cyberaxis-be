@@ -8,9 +8,7 @@ const errorHandler = (err, req, res, next) => {
 
   console.log("HIT");
 
-  res.status(statusCode);
-
-  res.json({
+  res.status(statusCode).json({
     message,
     stack: err.stack,
   });

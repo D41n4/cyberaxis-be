@@ -136,7 +136,7 @@ const getTweetsRecent = async (searchString) => {
       "author_id,created_at,entities,lang,public_metrics,context_annotations",
   });
 
-  console.log(data);
+  console.log(data.length);
 
   const filtered = filter(data.data, filterTweets);
   const parsed = filtered.map(parseToDoc);
