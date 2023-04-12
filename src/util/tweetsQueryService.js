@@ -35,6 +35,16 @@ const excludedHashtags = [
   "LGBTQ",
   "LGBT",
   "SEO",
+  "join",
+  "watch",
+  "webinar",
+  "interview",
+  "design",
+  "insurance",
+  "episode",
+  "prizes",
+  "win",
+  "download",
 ];
 
 const searchStrings = [
