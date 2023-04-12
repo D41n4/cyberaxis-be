@@ -34,6 +34,7 @@ const excludedHashtags = [
   "training",
   "LGBTQ",
   "LGBT",
+  "SEO",
 ];
 
 const searchStrings = [

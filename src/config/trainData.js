@@ -25,6 +25,15 @@ const hackersGroupsData = [
   "The Syrian Electronic Army",
   "APT37",
   "ScarCruft",
+  "Lazarus",
+  "Conti",
+  "REvil",
+  "Lapsus",
+  "Legion of Doom",
+  "Morpho",
+  "APT28",
+  "Dragonfly",
+  "Elderwood",
 ];
 
 const organisationsData = [
