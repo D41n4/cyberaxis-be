@@ -13,6 +13,8 @@ const mallwareData = [
   "trojan horse",
   "cryptojacking",
   "crypto-mining",
+  "downloader",
+  "exploit kit",
 ];
 
 const hackersGroupsData = [
@@ -71,6 +73,7 @@ const osData = [
   "Firefox OS",
   "Ubuntu Touch",
   "Chrome OS",
+  "HTB",
 ];
 
 const softwareData = [

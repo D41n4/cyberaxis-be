@@ -1,5 +1,4 @@
 const twitterClient = require("../config/twitterClient");
-const moment = require("moment");
 const { filter, uniq } = require("lodash");
 const cron = require("node-cron");
 const Tweet = require("../models/tweetModel");
@@ -45,6 +44,15 @@ const excludedHashtags = [
   "prizes",
   "win",
   "download",
+  "brand",
+  "register",
+  "reward",
+  "marketing",
+  "UX",
+  "UI",
+  "ProjectManagement",
+  "TimeManagement",
+  "NetSfere",
 ];
 
 const searchStrings = [
@@ -144,10 +152,8 @@ const getTweetsRecent = async (searchString) => {
     query: `${searchString} lang:en`,
     max_results: 100,
     "tweet.fields":
-      "author_id,created_at,entities,lang,public_metrics,context_annotations",
+      "author_id,created_at,entities,lang,public_metrics,context_annotations,source",
   });
-
-  console.log(data.length);
 
   const filtered = filter(data.data, filterTweets);
   const parsed = filtered.map(parseToDoc);
@@ -170,7 +176,10 @@ const tweetsQueryService = () => {
         Tweet.create({ ...tweet, entityList }).catch((err) => {
           // check if duplicate and update
           if (err.code === 11000) {
-            Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+            Tweet.findOneAndUpdate(
+              { id: tweet.id },
+              { ...tweet, entityList }
+            ).catch((err) =>
               console.log(colors.red(`ERR - update: ${err.message}`))
             );
           }
@@ -199,7 +208,10 @@ const tweetsQueryService = () => {
           Tweet.create({ ...tweet, entityList }).catch((err) => {
             // check if duplicate and update
             if (err.code === 11000) {
-              Tweet.findOneAndUpdate({ id: tweet.id }, tweet).catch((err) =>
+              Tweet.findOneAndUpdate(
+                { id: tweet.id },
+                { ...tweet, entityList }
+              ).catch((err) =>
                 console.log(colors.red(`ERR - update: ${err.message}`))
               );
             }

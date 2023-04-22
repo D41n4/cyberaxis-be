@@ -9,10 +9,11 @@ const User = require("../models/userModel");
 const topHashtags = asyncHandler(async (req, res) => {
   const pipeline = [
     {
+      // TODO filter out hashtags with the provided timeframe using query params
       $match: {
         created_at: {
-          $gte: new Date(moment().subtract(100000, "hours").toISOString()),
-          $lte: new Date(moment().subtract(0, "hours").toISOString()),
+          $gte: new Date(moment().subtract(1000000, "days").toISOString()),
+          $lte: new Date(moment().subtract(0, "days").toISOString()),
         },
       },
     },
@@ -46,7 +47,6 @@ const topHashtags = asyncHandler(async (req, res) => {
 // @access Private
 const getTweets = asyncHandler(async (req, res) => {
   const query = req.query;
-  console.log(query);
 
   const dbQuery = {
     hashtags: { $all: query.selectedHashtags },
@@ -59,6 +59,12 @@ const getTweets = asyncHandler(async (req, res) => {
       $options: "i",
     },
   };
+
+  if (query.sourceFilter === "1") {
+    dbQuery.isTrusted = true;
+  } else if (query.sourceFilter === "2") {
+    dbQuery.isTrusted = false;
+  }
 
   if (!query.selectedHashtags) delete dbQuery.hashtags;
   if (!query.selectedEntities) delete dbQuery.entityList;
@@ -78,7 +84,12 @@ const getTweets = asyncHandler(async (req, res) => {
   const tweetsWithFavourite = tweets.map((el) => {
     const isFavourite = favouriteTweets.includes(el._id);
 
-    return { ...el, isFavourite };
+    // check if tweet auhor id matches one of the users trusted accounts
+    const isUsersTrusted = user.trustedAccounts.some(
+      (account) => account.id === el.author_id
+    );
+
+    return { ...el, isFavourite, isTrusted: el.isTrusted || isUsersTrusted };
   });
 
   res.status(200).json({ data: tweetsWithFavourite });
@@ -102,6 +113,7 @@ const getSavedTweets = asyncHandler(async (req, res) => {
 // @route GET /api/tweets/test/tweets/query
 // @access Private
 // @query searchString: string
+// deprecated,used for testing
 const testQueryTweets = asyncHandler(async (req, res) => {
   const searchString = req.query.searchString;
 

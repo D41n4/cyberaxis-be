@@ -60,6 +60,8 @@ const addTrustedAccount = asyncHandler(async (req, res) => {
   const userId = req.userId;
   const { id, name } = req.body;
 
+  // TODO add id and name sanitization using regex
+
   const user = await User.findById(userId);
 
   const accAlreadyAdded = user.trustedAccounts.some((el) => el.id === id);
@@ -153,8 +155,10 @@ const favouriteTweet = asyncHandler(async (req, res) => {
 
   const user = await User.findById(userId);
 
+  // If the tweet is already in the array, remove it, otherwise add it
   const idx = user.favouriteTweets.findIndex((el) => el.toString() === tweetId);
 
+  // -1 means item is not found
   if (idx === -1) {
     user.favouriteTweets.push(tweetId);
   } else {

@@ -12,6 +12,7 @@ const router = express.Router();
 router.get("/", protect, getTweets);
 router.get("/saved", protect, getSavedTweets);
 router.get("/top-hashtags", protect, topHashtags);
+// deprecated,used for testing
 router.get("/test/tweets/query", protect, testQueryTweets);
 
 module.exports = router;

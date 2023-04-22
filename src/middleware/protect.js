@@ -3,15 +3,13 @@ const User = require("../models/userModel");
 const { decodeToken } = require("../util/jwt");
 
 const protect = asyncHandler(async (req, res, next) => {
-  let decoded;
-
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
       const token = req.headers.authorization.split(" ")[1];
-      decoded = decodeToken(token);
+      const decoded = decodeToken(token);
 
       if (!decoded) {
         res.status(401);

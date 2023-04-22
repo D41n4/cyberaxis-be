@@ -6,11 +6,8 @@ const errorHandler = (err, req, res, next) => {
 
   console.log(colors.red(err.message));
 
-  console.log("HIT");
-
   res.status(statusCode).json({
     message,
-    stack: err.stack,
   });
 };
 
