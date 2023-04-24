@@ -199,8 +199,6 @@ const tweetsQueryService = () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         const followers = await getUserFollowers(tweet.author_id);
 
-        // console.log(followers, followers > 10000);
-
         if (followers > 100000) {
           const entities = await nlpManager(tweet.text);
           const entityList = uniq(entities.map((el) => el.entity));
